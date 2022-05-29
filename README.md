@@ -1,2 +1,4 @@
-# 2022-05-29-text-detection-EAST
-Source code study.
+# Reference
+Many of the code is copied from
+https://github.com/SakuraRiven/EAST
+

@@ -130,3 +130,5 @@ dmypy.json
 
 dataset/
 _dataset/
+results/
+pths/
