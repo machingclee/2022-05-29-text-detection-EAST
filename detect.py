@@ -10,6 +10,7 @@ import torch
 import os
 import numpy as np
 import random
+from glob import glob
 
 
 def resize_img(img):
@@ -75,12 +76,19 @@ def restore_polys(valid_pos, valid_geo, score_shape, scale=4):
         y_max = y + d[1, i]
         x_min = x - d[2, i]
         x_max = x + d[3, i]
-        rotate_mat = get_rotate_mat(-angle[i])
+
+        if config.enable_rotation:
+            theta = -angle[i]
+        else:
+            theta = 0
+
+        rotate_mat = get_rotate_mat(theta)
 
         temp_x = np.array([[x_min, x_max, x_max, x_min]]) - x
         temp_y = np.array([[y_min, y_min, y_max, y_max]]) - y
         coordidates = np.concatenate((temp_x, temp_y), axis=0)
-        res = np.dot(rotate_mat, coordidates)
+        coord_scaling_mat = np.array([[config.bbox_scale_x, 0], [0, config.bbox_scale_y]])
+        res = np.dot(coord_scaling_mat, np.dot(rotate_mat, coordidates))
         res[0, :] += x
         res[1, :] += y
 
@@ -203,12 +211,14 @@ def performance_check(model, save_image_path):
 
 if __name__ == '__main__':
     model_path = './pths/model_epoch_5.pth'
-    img_path = 'test/test1.jpg'
-    res_img = 'test/test1_result.jpg'
     model = EAST().to(device)
     model.load_state_dict(torch.load(model_path))
     model.eval()
-    img = Image.open(img_path)
-    boxes = detect(img, model, device)
-    plot_img = plot_boxes(img, boxes)
-    plot_img.save(res_img)
+    img_paths = glob("test/in/*.jpg")
+
+    for img_path in img_paths:
+        result_img_path = img_path.replace("/in", "/out").replace(".jpg", "_result.jpg")
+        img = Image.open(img_path)
+        boxes = detect(img, model, device)
+        plot_img = plot_boxes(img, boxes)
+        plot_img.save(result_img_path)
