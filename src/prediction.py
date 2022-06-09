@@ -1,17 +1,14 @@
 from torchvision import transforms
 from PIL import Image, ImageDraw
-from models import EAST
-from dataset import get_rotate_mat
-from utils import nms_locality
-from device import device
-
-import config
+from .dataset import get_rotate_mat
+from .utils import nms_locality
+from .device import device
+from . import config
 import torch
 import os
 import numpy as np
 import random
 from glob import glob
-
 
 def resize_img(img):
     '''resize image to be divisible by 32
@@ -145,7 +142,7 @@ def adjust_ratio(boxes, ratio_w, ratio_h):
     return np.around(boxes)
 
 
-def detect(img, model, device):
+def compute_boxes(img, model, device):
     '''detect text regions of img using model
     Input:
             img   : PIL Image
@@ -189,7 +186,7 @@ def detect_dataset(model, device, test_img_path, submit_path):
 
     for i, img_file in enumerate(img_files):
         print('evaluating {} image'.format(i), end='\r')
-        boxes = detect(Image.open(img_file), model, device)
+        boxes = compute_boxes(Image.open(img_file), model, device)
         seq = []
         if boxes is not None:
             seq.extend([','.join([str(int(b)) for b in box[:-1]]) + '\n' for box in boxes])
@@ -202,7 +199,7 @@ def performance_check(model, save_image_path):
     images = os.listdir("dataset/images")
     random.shuffle(images)
     img = Image.open("dataset/images/{}".format(images[0]))
-    boxes = detect(img, model, device)
+    boxes = compute_boxes(img, model, device)
     plot_img = plot_boxes(img, boxes)
     plot_img.save(save_image_path)
     plot_img.save("results/latest_output.jpg")

@@ -115,3 +115,4 @@ class ConsoleLog():
             print(self.CLR)
         # ready for next epoch
         print(self.UP(self.lines_of_log))
+
