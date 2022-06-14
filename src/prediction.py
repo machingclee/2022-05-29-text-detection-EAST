@@ -10,6 +10,7 @@ import numpy as np
 import random
 from glob import glob
 
+
 def resize_img(img):
     '''resize image to be divisible by 32
     '''
@@ -84,14 +85,25 @@ def restore_polys(valid_pos, valid_geo, score_shape, scale=4):
         temp_x = np.array([[x_min, x_max, x_max, x_min]]) - x
         temp_y = np.array([[y_min, y_min, y_max, y_max]]) - y
         coordidates = np.concatenate((temp_x, temp_y), axis=0)
-        coord_scaling_mat = np.array([[config.bbox_scale_x, 0], [0, config.bbox_scale_y]])
-        res = np.dot(coord_scaling_mat, np.dot(rotate_mat, coordidates))
+        res = np.dot(rotate_mat, coordidates)
         res[0, :] += x
         res[1, :] += y
 
         if is_valid_poly(res, score_shape, scale):
             index.append(i)
-            polys.append([res[0, 0], res[1, 0], res[0, 1], res[1, 1], res[0, 2], res[1, 2], res[0, 3], res[1, 3]])
+            p11, p12, p21, p22, p31, p32, p41, p42 = [res[0, 0], res[1, 0],
+                                                      res[0, 1], res[1, 1], res[0, 2], res[1, 2], res[0, 3], res[1, 3]]
+            xoffset = (p11 - p21) * (config.bbox_scale_x - 1)
+            yoffset = (p12 - p42) * (config.bbox_scale_y - 1)
+            poly = [p11 + xoffset,
+                    p12 + yoffset,
+                    p21 - xoffset,
+                    p22 + yoffset,
+                    p31 - xoffset,
+                    p32 - yoffset,
+                    p41 + xoffset,
+                    p42 - yoffset]
+            polys.append(poly)
     return np.array(polys), index
 
 
